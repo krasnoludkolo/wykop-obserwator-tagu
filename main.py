@@ -15,7 +15,8 @@ def get_last_n_messages_from_tag(api, tag, n=10):
     response = api.get_tag(tag)
     data_ = response['data'][:n]
     messages = map(extract_message, data_)
-    return list(map(remove_html,messages))
+    return list(map(remove_html, messages))
+
 
 def main_loop(api):
     all_messages = set()
