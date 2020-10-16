@@ -1,7 +1,6 @@
 from wykop import WykopAPIv2
 import os
 import time
-import json
 
 
 def extract_message(entry):
