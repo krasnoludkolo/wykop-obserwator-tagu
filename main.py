@@ -1,6 +1,7 @@
 from wykop import WykopAPIv2
 import os
 import time
+import json
 
 
 def extract_message(entry):
@@ -11,9 +12,13 @@ def remove_html(message):
     return message.replace("<br />", "")
 
 
+def is_message(entry):
+    return entry['type'] == 'entry'
+
+
 def get_last_n_messages_from_tag(api, tag, n=10):
     response = api.get_tag(tag)
-    data_ = response['data'][:n]
+    data_ = list(filter(is_message, response['data']))[:n]
     messages = map(extract_message, data_)
     return list(map(remove_html, messages))
 
@@ -21,7 +26,7 @@ def get_last_n_messages_from_tag(api, tag, n=10):
 def main_loop(api):
     all_messages = set()
     while True:
-        new_messages = get_last_n_messages_from_tag(api, "apitest")
+        new_messages = get_last_n_messages_from_tag(api, "koronawirus")
         messages_to_display = [m for m in new_messages if m not in all_messages]
         for m in messages_to_display:
             print("-----------")
