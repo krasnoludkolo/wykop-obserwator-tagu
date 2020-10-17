@@ -1,37 +1,62 @@
 from wykop import WykopAPIv2
 import os
 import time
+from typing import List
+
+
+class WykopMessage:
+    def __init__(self, external_id, date, text):
+        self.external_id = external_id
+        self.date = date
+        self.text = text
+
+
+def by_date(message: WykopMessage):
+    return message.date
 
 
 def extract_message(entry):
-    return entry['entry'].body
+    external_id = entry['entry'].id
+    date = entry['entry'].date
+    text = entry['entry'].body
+    return WykopMessage(external_id, date, text)
 
 
-def remove_html(message):
-    return message.replace("<br />", "")
+def remove_html(wykop_message: WykopMessage) -> WykopMessage:
+    wykop_message.text = wykop_message.text.replace("<br />", "")
+    return wykop_message
 
 
-def is_message(entry):
+def is_message(entry) -> bool:
     return entry['type'] == 'entry'
 
 
-def get_last_n_messages_from_tag(api, tag, n=10):
+def get_last_n_messages_from_tag(api, tag, n=10) -> List[WykopMessage]:
     response = api.get_tag(tag)
-    data_ = list(filter(is_message, response['data']))[:n]
-    messages = map(extract_message, data_)
-    return list(map(remove_html, messages))
+    only_messages = list(filter(is_message, response['data']))
+    wykop_messages = list(map(extract_message, only_messages))
+    wykop_messages.sort(key=by_date)
+    return list(map(remove_html, wykop_messages))[:n]
+
+
+def print_wykopMessage(message: WykopMessage):
+    print("-----------")
+    print()
+    print(message.date)
+    print()
+    print(message.text)
+    print()
 
 
 def main_loop(api):
-    all_messages = set()
+    all_message_ids = set()
     while True:
-        new_messages = get_last_n_messages_from_tag(api, "koronawirus")
-        messages_to_display = [m for m in new_messages if m not in all_messages]
+        new_messages = get_last_n_messages_from_tag(api, "apitest")
+        messages_to_display = [m for m in new_messages if m.external_id not in all_message_ids]
         for m in messages_to_display:
-            print("-----------")
-            print(m)
-            all_messages.add(m)
-        time.sleep(10)
+            print_wykopMessage(m)
+            all_message_ids.add(m.external_id)
+        time.sleep(5)
 
 
 def main():
