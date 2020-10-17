@@ -1,7 +1,7 @@
 from wykop import WykopAPIv2
 import os
 import time
-from typing import List
+from typing import List, NoReturn
 
 
 class WykopMessage:
@@ -15,7 +15,7 @@ def by_date(message: WykopMessage):
     return message.date
 
 
-def extract_message(entry):
+def extract_message(entry) -> WykopMessage:
     external_id = entry['entry'].id
     date = entry['entry'].date
     text = entry['entry'].body
@@ -39,7 +39,7 @@ def get_last_n_messages_from_tag(api, tag, n=10) -> List[WykopMessage]:
     return list(map(remove_html, wykop_messages))[:n]
 
 
-def print_wykopMessage(message: WykopMessage):
+def print_wykopMessage(message: WykopMessage) -> NoReturn:
     print("-----------")
     print()
     print(message.date)
@@ -48,7 +48,7 @@ def print_wykopMessage(message: WykopMessage):
     print()
 
 
-def main_loop(api):
+def main_loop(api) -> NoReturn:
     all_message_ids = set()
     while True:
         new_messages = get_last_n_messages_from_tag(api, "apitest")
@@ -59,7 +59,7 @@ def main_loop(api):
         time.sleep(5)
 
 
-def main():
+def main() -> NoReturn:
     key = os.environ.get('WYKOP_TAKTYK_KEY')
     secret = os.environ.get('WYKOP_TAKTYK_SECRET')
     api = WykopAPIv2(key, secret)
