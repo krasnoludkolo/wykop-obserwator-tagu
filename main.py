@@ -2,6 +2,7 @@ from wykop import WykopAPIv2
 import os
 import time
 from typing import List, NoReturn
+from argparse import ArgumentParser
 
 
 class WykopMessage:
@@ -9,6 +10,13 @@ class WykopMessage:
         self.external_id = external_id
         self.date = date
         self.text = text
+
+
+class ProgramConfiguration:
+    def __init__(self, check_interval, tag, messages_to_take):
+        self.check_interval = check_interval
+        self.tag = tag
+        self.messages_to_take = messages_to_take
 
 
 def by_date(message: WykopMessage):
@@ -31,12 +39,12 @@ def is_message(entry) -> bool:
     return entry['type'] == 'entry'
 
 
-def get_last_n_messages_from_tag(api, tag, n=10) -> List[WykopMessage]:
+def get_last_n_messages_from_tag(api, tag, messages_to_take) -> List[WykopMessage]:
     response = api.get_tag(tag)
     only_messages = list(filter(is_message, response['data']))
     wykop_messages = list(map(extract_message, only_messages))
     wykop_messages.sort(key=by_date)
-    return list(map(remove_html, wykop_messages))[:n]
+    return list(map(remove_html, wykop_messages))[:messages_to_take]
 
 
 def print_wykopMessage(message: WykopMessage) -> NoReturn:
@@ -48,22 +56,38 @@ def print_wykopMessage(message: WykopMessage) -> NoReturn:
     print()
 
 
-def main_loop(api) -> NoReturn:
+def main_loop(api: WykopAPIv2, config: ProgramConfiguration) -> NoReturn:
     all_message_ids = set()
     while True:
-        new_messages = get_last_n_messages_from_tag(api, "apitest")
+        new_messages = get_last_n_messages_from_tag(api, config.tag, config.messages_to_take)
         messages_to_display = [m for m in new_messages if m.external_id not in all_message_ids]
         for m in messages_to_display:
             print_wykopMessage(m)
             all_message_ids.add(m.external_id)
-        time.sleep(5)
+        time.sleep(config.check_interval)
+
+
+def create_argument_parser() -> ArgumentParser:
+    parser = ArgumentParser()
+    parser.add_argument("tag", help="Watched tag")
+    parser.add_argument("-i", default=10, type=int, metavar="INTERVAL",
+                        help="How often try to download new messages from wykop api [in seconds]")
+    parser.add_argument("-n", default=10, type=int, metavar="MESSAGES_NUMBER",
+                        help="How many recent messages are downloaded each time")
+    return parser
+
+
+def load_program_args(parser: ArgumentParser) -> ProgramConfiguration:
+    args = parser.parse_args()
+    return ProgramConfiguration(args.i, args.tag, args.n)
 
 
 def main() -> NoReturn:
     key = os.environ.get('WYKOP_TAKTYK_KEY')
     secret = os.environ.get('WYKOP_TAKTYK_SECRET')
     api = WykopAPIv2(key, secret)
-    main_loop(api)
+    program_configuration = load_program_args(create_argument_parser())
+    main_loop(api, program_configuration)
 
 
 if __name__ == '__main__':
