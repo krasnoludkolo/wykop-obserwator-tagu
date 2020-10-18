@@ -40,7 +40,11 @@ def is_message(entry) -> bool:
 
 
 def get_last_n_messages_from_tag(api, tag, messages_to_take) -> List[WykopMessage]:
-    response = api.get_tag(tag)
+    try:
+        response = api.get_tag(tag)
+    except Exception:
+        print("Błąd podczas pobierania wiadomości z api wykopu")
+        return []
     only_messages = list(filter(is_message, response['data']))
     wykop_messages = list(map(extract_message, only_messages))
     wykop_messages.sort(key=by_date)
@@ -64,7 +68,10 @@ def main_loop(api: WykopAPIv2, config: ProgramConfiguration) -> NoReturn:
         for m in messages_to_display:
             print_wykopMessage(m)
             all_message_ids.add(m.external_id)
-        time.sleep(config.check_interval)
+        try:
+            time.sleep(config.check_interval)
+        except KeyboardInterrupt:
+            pass
 
 
 def create_argument_parser() -> ArgumentParser:
