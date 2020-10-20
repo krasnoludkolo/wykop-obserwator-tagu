@@ -33,11 +33,6 @@ def extract_message(entry) -> WykopMessage:
     return WykopMessage(external_id, date, text)
 
 
-def remove_html(wykop_message: WykopMessage) -> WykopMessage:
-    wykop_message.text = wykop_message.text.replace("<br />", "")
-    return wykop_message
-
-
 def is_message(entry) -> bool:
     return entry['type'] == 'entry'
 
@@ -51,7 +46,7 @@ def get_last_n_messages_from_tag(api, tag, messages_to_take) -> List[WykopMessag
     only_messages = list(filter(is_message, response['data']))
     wykop_messages = list(map(extract_message, only_messages))
     wykop_messages.sort(key=by_date)
-    return list(map(remove_html, wykop_messages))[:messages_to_take]
+    return wykop_messages[:messages_to_take]
 
 
 def print_wykopMessage(message: WykopMessage) -> NoReturn:
@@ -95,7 +90,7 @@ def load_program_args(parser: ArgumentParser) -> ProgramConfiguration:
 def main() -> NoReturn:
     key = os.environ.get('WYKOP_TAKTYK_KEY')
     secret = os.environ.get('WYKOP_TAKTYK_SECRET')
-    api = WykopAPIv2(key, secret)
+    api = WykopAPIv2(key, secret, output='clear')
     program_configuration = load_program_args(create_argument_parser())
     main_loop(api, program_configuration)
 
