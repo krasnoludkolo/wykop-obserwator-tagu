@@ -1,8 +1,11 @@
 from wykop import WykopAPIv2
+
 import os
 import time
 from typing import List, NoReturn
 from argparse import ArgumentParser
+import signal
+import sys
 
 
 class WykopMessage:
@@ -97,5 +100,10 @@ def main() -> NoReturn:
     main_loop(api, program_configuration)
 
 
+def signal_handler(sig, frame):
+    sys.exit(0)
+
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal_handler)
     main()
