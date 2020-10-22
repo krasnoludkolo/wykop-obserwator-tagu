@@ -45,7 +45,7 @@ def get_last_n_messages_from_tag(api, tag, messages_to_take) -> List[WykopMessag
         return []
     only_messages = list(filter(is_message, response['data']))
     wykop_messages = list(map(extract_message, only_messages))
-    wykop_messages.sort(key=by_date)
+    wykop_messages.sort(key=by_date, reverse=True)
     return wykop_messages[:messages_to_take]
 
 
@@ -63,6 +63,7 @@ def main_loop(api: WykopAPIv2, config: ProgramConfiguration) -> NoReturn:
     while True:
         new_messages = get_last_n_messages_from_tag(api, config.tag, config.messages_to_take)
         messages_to_display = [m for m in new_messages if m.external_id not in all_message_ids]
+        messages_to_display.reverse()
         for m in messages_to_display:
             print_wykopMessage(m)
             all_message_ids.add(m.external_id)
