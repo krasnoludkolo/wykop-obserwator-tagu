@@ -7,19 +7,19 @@ from argparse import ArgumentParser
 import signal
 import sys
 
+from config import ProgramConfiguration, ImageConverterConfig
+from image import ImageConverter
+
 
 class WykopMessage:
-    def __init__(self, external_id, date, text):
+    def __init__(self, external_id, date, text, image_url):
         self.external_id = external_id
         self.date = date
         self.text = text
+        self.image_url = image_url
 
-
-class ProgramConfiguration:
-    def __init__(self, check_interval, tag, messages_to_take):
-        self.check_interval = check_interval
-        self.tag = tag
-        self.messages_to_take = messages_to_take
+    def has_image(self):
+        return len(self.image_url) != 0
 
 
 def by_date(message: WykopMessage):
@@ -27,17 +27,22 @@ def by_date(message: WykopMessage):
 
 
 def extract_message(entry) -> WykopMessage:
-    external_id = entry['entry'].id
-    date = entry['entry'].date
-    text = entry['entry'].body
-    return WykopMessage(external_id, date, text)
+    raw = entry['entry']
+    external_id = raw.id
+    date = raw.date
+    text = raw.body
+    if 'embed' in raw:
+        image_url = raw['embed'].url
+    else:
+        image_url = ''
+    return WykopMessage(external_id, date, text, image_url)
 
 
 def is_message(entry) -> bool:
     return entry['type'] == 'entry'
 
 
-def get_last_n_messages_from_tag(api, tag, messages_to_take) -> List[WykopMessage]:
+def get_last_n_messages_from_tag(api, tag: str, messages_to_take: int) -> List[WykopMessage]:
     try:
         response = api.get_tag(tag)
     except Exception:
@@ -49,23 +54,28 @@ def get_last_n_messages_from_tag(api, tag, messages_to_take) -> List[WykopMessag
     return wykop_messages[:messages_to_take]
 
 
-def print_wykopMessage(message: WykopMessage) -> NoReturn:
+def print_wykopMessage(message: WykopMessage, image_converter: ImageConverter,
+                       config: ProgramConfiguration) -> NoReturn:
     print("-----------")
     print()
     print(message.date)
     print()
     print(message.text)
     print()
+    if config.display_image and message.has_image():
+        print(image_converter.convert_to_ascii(message.image_url))
+    elif message.has_image():
+        print("<Image>")
 
 
-def main_loop(api: WykopAPIv2, config: ProgramConfiguration) -> NoReturn:
+def main_loop(api: WykopAPIv2, config: ProgramConfiguration, image_converter: ImageConverter) -> NoReturn:
     all_message_ids = set()
     while True:
         new_messages = get_last_n_messages_from_tag(api, config.tag, config.messages_to_take)
         messages_to_display = [m for m in new_messages if m.external_id not in all_message_ids]
         messages_to_display.reverse()
         for m in messages_to_display:
-            print_wykopMessage(m)
+            print_wykopMessage(m, image_converter, config)
             all_message_ids.add(m.external_id)
         try:
             time.sleep(config.check_interval)
@@ -80,12 +90,14 @@ def create_argument_parser() -> ArgumentParser:
                         help="How often try to download new messages from wykop api [in seconds]")
     parser.add_argument("-n", default=10, type=int, metavar="MESSAGES_NUMBER",
                         help="How many recent messages are downloaded each time")
+    parser.add_argument("--no-images", default=True, dest='display_image', action='store_false',
+                        help="Do not convert images into ascii images")
     return parser
 
 
 def load_program_args(parser: ArgumentParser) -> ProgramConfiguration:
     args = parser.parse_args()
-    return ProgramConfiguration(args.i, args.tag, args.n)
+    return ProgramConfiguration(args.i, args.tag, args.n, args.display_image)
 
 
 def main() -> NoReturn:
@@ -93,7 +105,8 @@ def main() -> NoReturn:
     secret = os.environ.get('WYKOP_TAKTYK_SECRET')
     api = WykopAPIv2(key, secret, output='clear')
     program_configuration = load_program_args(create_argument_parser())
-    main_loop(api, program_configuration)
+    image_converter = ImageConverter(ImageConverterConfig())
+    main_loop(api, program_configuration, image_converter)
 
 
 def signal_handler(sig, frame):
