@@ -63,7 +63,10 @@ def print_wykopMessage(message: WykopMessage, image_converter: ImageConverter,
     print(message.text)
     print()
     if config.display_image and message.has_image():
-        print(image_converter.convert_to_ascii(message.image_url))
+        try:
+            print(image_converter.convert_to_ascii(message.image_url))
+        except:
+            print("<Image error>")
     elif message.has_image():
         print("<Image>")
 
