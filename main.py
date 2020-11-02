@@ -104,8 +104,8 @@ def load_program_args(parser: ArgumentParser) -> ProgramConfiguration:
 
 
 def main() -> NoReturn:
-    key = os.environ.get('WYKOP_TAKTYK_KEY')
-    secret = os.environ.get('WYKOP_TAKTYK_SECRET')
+    key = os.environ.get('WYKOP_TAG_KEY')
+    secret = os.environ.get('WYKOP_TAG_SECRET')
     api = WykopAPIv2(key, secret, output='clear')
     program_configuration = load_program_args(create_argument_parser())
     image_converter = ImageConverter(ImageConverterConfig())
