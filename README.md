@@ -20,7 +20,7 @@ Program wczytuje je z dwóch zmiennych środowiskowych:
 * `WYKOP_TAG_SECRET` - sekret
 
 
-### Instrukcja odpalenia (znaczenie parametrów, domyślne wartości)
+### Instrukcja odpalenia
 
 ```
 usage: main.py [-h] [-i INTERVAL] [-n MESSAGES_NUMBER] [--no-images] tag
