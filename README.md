@@ -39,7 +39,7 @@ optional arguments:
 ### Jak można kontrybuowac
 
 1. Zgłosić problem do [issues](https://github.com/krasnoludkolo/wykop-obserwator-tagu/issues) (staram się je od razu sprawdzać)
-2. Zrobić forka repo, wprowadzić zmiany i wystawić PR. Jeśli byłaby to implementacja istniejącego [issue](https://github.com/krasnoludkolo/wykop-obserwator-tagu/issues) warto napisać w komentarzu, że się nad nim pracuje.
+2. Zrobić forka repo, wprowadzić zmiany i wystawić PR. Jeśli byłaby to implementacja istniejącego [issue](https://github.com/krasnoludkolo/wykop-obserwator-tagu/issues) warto napisać w komentarzu, że się nad nim pracuje. Najlepiej też oznaczyć mnie w PR.
 
 ### Jak można wspomóc autora ( ͡° ͜ʖ ͡°)
 Napisz do mnie na PW na wykopie, dogadamy się: [krasnoludkolo](https://www.wykop.pl/ludzie/krasnoludkolo/)
