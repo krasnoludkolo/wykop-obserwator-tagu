@@ -56,12 +56,12 @@ def get_last_n_messages_from_tag(api, tag: str, messages_to_take: int) -> List[W
 
 def print_wykopMessage(message: WykopMessage, image_converter: ImageConverter,
                        config: ProgramConfiguration) -> NoReturn:
-    print("-----------")
-    print()
-    print(message.date)
-    print()
-    print(message.text)
-    print()
+    text = f"""
+{message.date}
+
+{message.text}
+"""
+    print(text)
     if config.display_image and message.has_image():
         try:
             print(image_converter.convert_to_ascii(message.image_url))
@@ -77,6 +77,8 @@ def main_loop(api: WykopAPIv2, config: ProgramConfiguration, image_converter: Im
         new_messages = get_last_n_messages_from_tag(api, config.tag, config.messages_to_take)
         messages_to_display = [m for m in new_messages if m.external_id not in all_message_ids]
         messages_to_display.reverse()
+        if len(messages_to_display) != 0 and config.show_new_message_separator:
+            print("========================= nowe =========================")
         for m in messages_to_display:
             print_wykopMessage(m, image_converter, config)
             all_message_ids.add(m.external_id)
@@ -95,12 +97,14 @@ def create_argument_parser() -> ArgumentParser:
                         help="How many recent messages are downloaded each time")
     parser.add_argument("--no-images", default=True, dest='display_image', action='store_false',
                         help="Do not convert images into ascii images")
+    parser.add_argument("--no-msg-separator", default=True, dest='show_separator', action='store_false',
+                        help="Do not show new messages separator")
     return parser
 
 
 def load_program_args(parser: ArgumentParser) -> ProgramConfiguration:
     args = parser.parse_args()
-    return ProgramConfiguration(args.i, args.tag, args.n, args.display_image)
+    return ProgramConfiguration(args.i, args.tag, args.n, args.display_image, args.show_separator)
 
 
 def main() -> NoReturn:
