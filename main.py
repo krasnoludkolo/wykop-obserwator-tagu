@@ -1,12 +1,12 @@
 
 import os
-import time
-from typing import List, NoReturn
-from argparse import ArgumentParser
 import signal
 import sys
+import time
+from argparse import ArgumentParser
 
-from wykop import WykopAPI
+from typing import List, NoReturn
+import wykop
 
 from config import ProgramConfiguration, ImageConverterConfig
 from image import ImageConverter
@@ -72,7 +72,7 @@ def print_wykopMessage(message: WykopMessage, image_converter: ImageConverter,
         print("<Image>")
 
 
-def main_loop(api: WykopAPI, config: ProgramConfiguration, image_converter: ImageConverter) -> NoReturn:
+def main_loop(api: wykop.WykopAPI, config: ProgramConfiguration, image_converter: ImageConverter) -> NoReturn:
     all_message_ids = set()
     while True:
         new_messages = get_last_n_messages_from_tag(api, config.tag, config.messages_to_take)
@@ -111,7 +111,7 @@ def load_program_args(parser: ArgumentParser) -> ProgramConfiguration:
 def main() -> NoReturn:
     key = os.environ.get('WYKOP_TAG_KEY')
     secret = os.environ.get('WYKOP_TAG_SECRET')
-    api = WykopAPI(key, secret, output='clear')
+    api = wykop.WykopAPI(key, secret, output='clear')
     program_configuration = load_program_args(create_argument_parser())
     image_converter = ImageConverter(ImageConverterConfig())
     main_loop(api, program_configuration, image_converter)
