@@ -28,29 +28,23 @@ def by_date(message: WykopMessage):
 
 
 def extract_message(entry) -> WykopMessage:
-    raw = entry['entry']
-    external_id = raw.id
-    date = raw.date
-    text = raw.body
-    if 'embed' in raw:
-        image_url = raw['embed'].url
+    external_id = entry.id
+    date = entry.date
+    text = entry.body
+    if 'embed' in entry:
+        image_url = entry['embed'].url
     else:
         image_url = ''
     return WykopMessage(external_id, date, text, image_url)
 
 
-def is_message(entry) -> bool:
-    return entry['type'] == 'entry'
-
-
 def get_last_n_messages_from_tag(api, tag: str, messages_to_take: int) -> List[WykopMessage]:
     try:
-        response = api.tag(tag)
+        response = api.tag_entries(tag)
     except Exception:
         print("Błąd podczas pobierania wiadomości z api wykopu")
         return []
-    only_messages = list(filter(is_message, response))
-    wykop_messages = list(map(extract_message, only_messages))
+    wykop_messages = list(map(extract_message, response))
     wykop_messages.sort(key=by_date, reverse=True)
     return wykop_messages[:messages_to_take]
 
