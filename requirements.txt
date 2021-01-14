@@ -1,4 +1,4 @@
-wykop-sdk-reborn==0.3.0
+wykop-sdk-reborn==0.5.0
 requests~=2.25.0
 urllib3~=1.26.2
 pillow~=8.0.1
