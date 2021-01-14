@@ -1,15 +1,16 @@
-
 import os
 import signal
 import sys
 import time
 from argparse import ArgumentParser
 
-from typing import List, NoReturn
-import wykop
+from typing import List, NoReturn, Tuple
+from wykop import MultiKeyWykopAPI, WykopAPI
 
 from config import ProgramConfiguration, ImageConverterConfig
 from image import ImageConverter
+
+KEYS_FILE_NAME = '../keys'
 
 
 class WykopMessage:
@@ -66,7 +67,7 @@ def print_wykopMessage(message: WykopMessage, image_converter: ImageConverter,
         print("<Image>")
 
 
-def main_loop(api: wykop.WykopAPI, config: ProgramConfiguration, image_converter: ImageConverter) -> NoReturn:
+def main_loop(api: WykopAPI, config: ProgramConfiguration, image_converter: ImageConverter) -> NoReturn:
     all_message_ids = set()
     while True:
         new_messages = get_last_n_messages_from_tag(api, config.tag, config.messages_to_take)
@@ -102,10 +103,31 @@ def load_program_args(parser: ArgumentParser) -> ProgramConfiguration:
     return ProgramConfiguration(args.i, args.tag, args.n, args.display_image, args.show_separator)
 
 
+def read_keys_from_file() -> List[List[str]]:
+    with open(KEYS_FILE_NAME) as f:
+        return [line.split() for line in f.readlines()]
+
+
+def read_keys_from_envs() -> Tuple[str, str, str]:
+    key = os.environ.get('WYKOP_TAKTYK_KEY')
+    secret = os.environ.get('WYKOP_TAKTYK_SECRET')
+    account_key = os.environ.get('WYKOP_TAKTYK_ACCOUNTKEY')
+    return key, secret, account_key
+
+
+def create_wykop_api():
+    if os.path.isfile(KEYS_FILE_NAME):
+        keys = read_keys_from_file()
+        api = MultiKeyWykopAPI(keys)
+    else:
+        key, secret, account_key = read_keys_from_envs()
+        api = WykopAPI(key, secret, account_key=account_key)
+    api.authenticate()
+    return api
+
+
 def main() -> NoReturn:
-    key = os.environ.get('WYKOP_TAG_KEY')
-    secret = os.environ.get('WYKOP_TAG_SECRET')
-    api = wykop.WykopAPI(key, secret, output='clear')
+    api = create_wykop_api()
     program_configuration = load_program_args(create_argument_parser())
     image_converter = ImageConverter(ImageConverterConfig())
     main_loop(api, program_configuration, image_converter)
