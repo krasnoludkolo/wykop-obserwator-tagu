@@ -118,10 +118,10 @@ def read_keys_from_envs() -> Tuple[str, str, str]:
 def create_wykop_api():
     if os.path.isfile(KEYS_FILE_NAME):
         keys = read_keys_from_file()
-        api = MultiKeyWykopAPI(keys)
+        api = MultiKeyWykopAPI(keys, output='clear')
     else:
         key, secret, account_key = read_keys_from_envs()
-        api = WykopAPI(key, secret, account_key=account_key)
+        api = WykopAPI(key, secret, account_key=account_key,output='clear')
     api.authenticate()
     return api
 
